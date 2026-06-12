@@ -1,8 +1,53 @@
-<!-- ... existing code ... -->
-<body class="text-gray-800 min-h-screen pb-12">
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro Comparativo - Fazenda Oásis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        oasis: {
+                            light: '#a7f3d0',
+                            DEFAULT: '#10b981',
+                            dark: '#047857',
+                            deep: '#064e3b'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Estilos de foco personalizados e melhorias de contraste */
+        .custom-input {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .custom-input:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+        }
+        @media print {
+            body { background-color: white; }
+            .no-print { display: none !important; }
+            #exportableContent { box-shadow: none; border: none; padding: 0; }
+            @page { margin: 1cm; }
+        }
+    </style>
+    <!-- Bibliotecas para Gráficos e Exportação -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-12 font-sans">
 
     <!-- Header -->
-    <header class="bg-oasis-dark text-white p-6 shadow-md">
+    <header class="bg-oasis-deep text-white p-6 shadow-md no-print">
         <div class="max-w-6xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-5">
                 <img src="https://i.imgur.com/wEozr34.png" alt="Logo Oásis" class="h-16 w-auto object-contain border-none">
@@ -16,88 +61,353 @@
         </div>
     </header>
 
-    <main class="max-w-6xl mx-auto mt-8 px-4">
-<!-- ... existing code ... -->
-                    <!-- Unidade Custom -->
-                    <div id="unidadeCustomContainer" class="hidden col-span-1 md:col-span-2 lg:col-span-3">
-                        <input type="text" id="unidadeCustom" placeholder="Digite a unidade" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-oasis focus:border-oasis">
+    <main class="max-w-6xl mx-auto mt-8 px-4 no-print" id="inputSection">
+        
+        <!-- Alerta de Notificação customizado (Substituindo o alert nativo) -->
+        <div id="notificationArea" class="hidden mb-6 p-4 rounded-lg border flex items-center gap-3 shadow-sm transition-all duration-300">
+            <i id="notificationIcon" class="text-2xl"></i>
+            <span id="notificationMessage" class="font-medium"></span>
+        </div>
+
+        <!-- Formulário de Entrada -->
+        <div class="bg-white p-8 rounded-xl shadow-md border border-slate-200 mb-8">
+            <h3 class="text-xl font-bold text-slate-800 mb-6 border-b border-slate-150 pb-3 flex items-center gap-2">
+                <i class="ph ph-flask text-oasis text-2xl"></i> Novo Registro de Teste
+            </h3>
+
+            <form id="testForm" onsubmit="event.preventDefault(); addTest();">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    
+                    <!-- Bloco -->
+                    <div class="flex flex-col">
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Bloco</label>
+                        <select id="bloco" onchange="toggleCustom('bloco')" required class="custom-input w-full p-3 border-2 border-slate-300 rounded-lg bg-white focus:outline-none">
+                            <option value="">Selecione...</option>
+                            <!-- Blocos de 01 a 18 -->
+                            <script>
+                                for(let i = 1; i <= 18; i++) {
+                                    let num = i < 10 ? '0' + i : i;
+                                    document.write(`<option value="${num}">Bloco ${num}</option>`);
+                                }
+                            </script>
+                            <option value="outro">Outro (digitar)...</option>
+                        </select>
+                    </div>
+                    <div id="blocoCustomContainer" class="hidden flex flex-col">
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Especificar Bloco</label>
+                        <input type="text" id="blocoCustom" placeholder="Ex: Bloco 19" class="custom-input w-full p-3 border-2 border-slate-300 rounded-lg focus:outline-none">
+                    </div>
+
+                    <!-- Nº Teste -->
+                    <div class="flex flex-col">
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Nº Teste</label>
+                        <input type="text" id="numTeste" required placeholder="Ex: T01" class="custom-input w-full p-3 border-2 border-slate-300 rounded-lg focus:outline-none">
+                    </div>
+
+                    <!-- Aplicação -->
+                    <div class="lg:col-span-2 flex flex-col">
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Aplicação (Produto / Tratamento)</label>
+                        <input type="text" id="aplicacao" required placeholder="Ex: Fertilizante Orgânico X" class="custom-input w-full p-3 border-2 border-slate-300 rounded-lg focus:outline-none">
+                    </div>
+
+                    <!-- Cultura -->
+                    <div class="flex flex-col">
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Cultura</label>
+                        <select id="cultura" onchange="toggleCustom('cultura')" required class="custom-input w-full p-3 border-2 border-slate-300 rounded-lg bg-white focus:outline-none">
+                            <option value="">Selecione...</option>
+                            <option value="Brócolis">Brócolis</option>
+                            <option value="Couve Flor">Couve Flor</option>
+                            <option value="outro">Outra (digitar)...</option>
+                        </select>
+                    </div>
+                    <div id="culturaCustomContainer" class="hidden flex flex-col">
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Especificar Cultura</label>
+                        <input type="text" id="culturaCustom" placeholder="Ex: Alface" class="custom-input w-full p-3 border-2 border-slate-300 rounded-lg focus:outline-none">
+                    </div>
+
+                    <!-- Variedade -->
+                    <div class="flex flex-col">
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Variedade</label>
+                        <select id="variedade" onchange="toggleCustom('variedade')" required class="custom-input w-full p-3 border-2 border-slate-300 rounded-lg bg-white focus:outline-none">
+                            <option value="">Selecione...</option>
+                            <option value="Syngenta BRO">Syngenta BRO</option>
+                            <option value="TSV Master">TSV Master</option>
+                            <option value="Pharlap">Pharlap</option>
+                            <option value="Jiraya">Jiraya</option>
+                            <option value="outro">Outra (digitar)...</option>
+                        </select>
+                    </div>
+                    <div id="variedadeCustomContainer" class="hidden flex flex-col">
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Especificar Variedade</label>
+                        <input type="text" id="variedadeCustom" placeholder="Ex: Americana" class="custom-input w-full p-3 border-2 border-slate-300 rounded-lg focus:outline-none">
+                    </div>
+
+                    <!-- Quantidade e Unidade de Aplicação -->
+                    <div class="flex flex-col">
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Qtd. Aplicada</label>
+                        <input type="number" step="0.01" id="quantidade" required placeholder="Ex: 50" class="custom-input w-full p-3 border-2 border-slate-300 rounded-lg focus:outline-none">
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Unidade</label>
+                        <select id="unidade" onchange="toggleCustom('unidade')" required class="custom-input w-full p-3 border-2 border-slate-300 rounded-lg bg-white focus:outline-none">
+                            <option value="L">Litros (L)</option>
+                            <option value="mL">Mililitros (mL)</option>
+                            <option value="Kg">Quilos (Kg)</option>
+                            <option value="g">Gramas (g)</option>
+                            <option value="outro">Outra (digitar)...</option>
+                        </select>
+                    </div>
+
+                    <!-- Unidade Customizada -->
+                    <div id="unidadeCustomContainer" class="hidden lg:col-span-2 flex flex-col">
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Especificar Unidade</label>
+                        <input type="text" id="unidadeCustom" placeholder="Digite a unidade" class="custom-input w-full p-3 border-2 border-slate-300 rounded-lg focus:outline-none">
                     </div>
 
                     <!-- Dados da Colheita -->
-                    <div class="col-span-1 md:col-span-2 lg:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-4 bg-green-50 p-5 rounded-lg border border-green-200 mt-2">
+                    <div class="col-span-1 md:col-span-2 lg:col-span-4 grid grid-cols-1 md:grid-cols-4 gap-5 bg-emerald-50/50 p-6 rounded-xl border-2 border-emerald-100 mt-4 shadow-inner">
                         <h4 class="col-span-full font-bold text-oasis-dark flex items-center gap-2 text-lg mb-[-10px]">
-                            <i class="ph ph-scales"></i> Dados da Colheita
+                            <i class="ph ph-scales text-xl"></i> Dados de Colheita do Lote
                         </h4>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Total de Mudas</label>
-                            <input type="number" id="totalMudas" required placeholder="Ex: 600" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-oasis focus:border-oasis">
+                        <div class="flex flex-col">
+                            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Total de Mudas</label>
+                            <input type="number" id="totalMudas" required placeholder="Ex: 600" class="custom-input w-full p-3 border-2 border-emerald-200 bg-white rounded-lg focus:outline-none">
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Unid. Colhidas</label>
-                            <input type="number" id="unidadesColhidas" oninput="calcularTotalKg()" required placeholder="Ex: 500" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-oasis focus:border-oasis">
+                        <div class="flex flex-col">
+                            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Unid. Colhidas</label>
+                            <input type="number" id="unidadesColhidas" oninput="calcularTotalKg()" required placeholder="Ex: 500" class="custom-input w-full p-3 border-2 border-emerald-200 bg-white rounded-lg focus:outline-none">
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Média (g) / Unid</label>
-                            <input type="number" step="0.1" id="mediaGrama" oninput="calcularTotalKg()" required placeholder="Ex: 450.5" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-oasis focus:border-oasis">
+                        <div class="flex flex-col">
+                            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Média (g) / Unid</label>
+                            <input type="number" step="0.1" id="mediaGrama" oninput="calcularTotalKg()" required placeholder="Ex: 450.5" class="custom-input w-full p-3 border-2 border-emerald-200 bg-white rounded-lg focus:outline-none">
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Total Colhido (Kg)</label>
-                            <input type="number" step="0.01" id="totalKg" readonly placeholder="Auto-calculado" class="w-full p-2.5 bg-gray-100 border border-gray-300 rounded-lg font-bold text-green-700 cursor-not-allowed">
+                        <div class="flex flex-col">
+                            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Total Colhido (Kg)</label>
+                            <input type="number" step="0.01" id="totalKg" readonly placeholder="Auto-calculado" class="w-full p-3 bg-emerald-100/60 border-2 border-emerald-200 rounded-lg font-bold text-emerald-800 cursor-not-allowed">
                         </div>
-                        <p class="col-span-full text-xs text-gray-600 mt-[-10px]">O Índice de Eficiência (%) será gerado automaticamente com base no Total (Kg) comparado ao teste de maior rendimento.</p>
+                        <p class="col-span-full text-xs text-slate-500 mt-[-5px]">O Índice de Eficiência (%) será calculado automaticamente e comparado em relação ao lote de maior rendimento registrado na lista.</p>
                     </div>
 
                     <!-- Botão Adicionar -->
-<!-- ... existing code ... -->
-                        <thead>
-                            <tr class="bg-gray-50 text-gray-600 text-sm border-b">
-                                <th class="p-3 font-semibold">Bloco</th>
-                                <th class="p-3 font-semibold">Nº Teste</th>
-                                <th class="p-3 font-semibold">Aplicação</th>
-                                <th class="p-3 font-semibold">Cultura / Var.</th>
-                                <th class="p-3 font-semibold">Dosagem</th>
-                                <th class="p-3 font-semibold">Mudas</th>
-                                <th class="p-3 font-semibold">Colheita (Un/g)</th>
-                                <th class="p-3 font-semibold">Total Kg</th>
-                                <th class="p-3 font-semibold text-center">Ação</th>
-                            </tr>
-                        </thead>
-                        <tbody id="testTableBody" class="text-sm divide-y divide-gray-100">
-                            <tr>
-                                <td colspan="9" class="p-4 text-center text-gray-400">Nenhum teste adicionado ainda.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-<!-- ... existing code ... -->
-            <!-- Conteúdo a ser impresso/exportado -->
-            <div id="exportableContent" class="bg-white p-8 rounded-xl shadow-md border border-gray-200">
-                
-                <div class="flex items-center justify-center gap-6 mb-8 border-b pb-6">
-                    <img src="https://i.imgur.com/wEozr34.png" alt="Logo Oásis" class="h-24 w-auto object-contain border-none">
-                    <div class="text-left">
-                        <h2 class="text-3xl font-bold text-oasis-dark">Relatório Comparativo de Eficiência</h2>
-                        <h3 class="text-xl text-gray-500 mt-2">Fazenda Oásis</h3>
-                        <p class="text-sm text-gray-400 mt-1" id="reportDate"></p>
+                    <div class="col-span-1 md:col-span-2 lg:col-span-4 flex justify-end mt-4">
+                        <button type="submit" class="bg-oasis hover:bg-oasis-dark text-white px-8 py-3.5 rounded-lg font-bold shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 text-base">
+                            <i class="ph ph-plus-circle text-2xl"></i> Adicionar à Lista
+                        </button>
                     </div>
                 </div>
+            </form>
+        </div>
 
-                <!-- Resumo e Observação (Conclusão) -->
-<!-- ... existing code ... -->
-                        <thead>
-                            <tr class="bg-oasis text-white text-sm">
-                                <th class="p-3 border border-gray-300">Bloco</th>
-                                <th class="p-3 border border-gray-300">Teste</th>
-                                <th class="p-3 border border-gray-300">Aplicação</th>
-                                <th class="p-3 border border-gray-300">Cultura/Var.</th>
-                                <th class="p-3 border border-gray-300">Mudas</th>
-                                <th class="p-3 border border-gray-300">Unidades</th>
-                                <th class="p-3 border border-gray-300">Média(g)</th>
-                                <th class="p-3 border border-gray-300 font-bold bg-oasis-dark">Total Kg</th>
-                                <th class="p-3 border border-gray-300 font-bold bg-green-900">Eficiência(%)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="finalTableBody" class="text-sm">
-<!-- ... existing code ... -->
+        <!-- Tabela de Rascunho (Preview) -->
+        <div class="bg-white p-8 rounded-xl shadow-md border border-slate-200 mb-8">
+            <div class="flex justify-between items-center mb-6 border-b border-slate-100 pb-3">
+                <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                    <i class="ph ph-list-numbers text-oasis text-2xl"></i> Testes Pré-registrados
+                </h3>
+                <span id="testCounter" class="bg-slate-100 text-slate-600 px-4 py-1.5 rounded-full text-sm font-bold border border-slate-250">0 Registros</span>
+            </div>
+            
+            <!-- Gráficos Histórico (Preview) -->
+            <div id="previewChartsContainer" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+                    <h4 class="text-center text-sm font-bold text-slate-700 mb-4">Rendimento (Total Kg) e Tendência</h4>
+                    <div class="flex-grow relative h-64 w-full">
+                        <canvas id="previewBarChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center">
+                    <h4 class="text-center text-sm font-bold text-slate-700 mb-4">Proporção de Colheita</h4>
+                    <div class="flex-grow relative h-64 w-full max-w-[300px]">
+                        <canvas id="previewPieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-lg border border-slate-200 shadow-sm">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-600 text-sm border-b border-slate-200">
+                            <th class="p-4 font-bold uppercase tracking-wider text-xs">Bloco</th>
+                            <th class="p-4 font-bold uppercase tracking-wider text-xs">Nº Teste</th>
+                            <th class="p-4 font-bold uppercase tracking-wider text-xs">Aplicação</th>
+                            <th class="p-4 font-bold uppercase tracking-wider text-xs">Cultura / Var.</th>
+                            <th class="p-4 font-bold uppercase tracking-wider text-xs">Dosagem</th>
+                            <th class="p-4 font-bold uppercase tracking-wider text-xs">Mudas</th>
+                            <th class="p-4 font-bold uppercase tracking-wider text-xs">Colheita (Un/g)</th>
+                            <th class="p-4 font-bold uppercase tracking-wider text-xs">Total Kg</th>
+                            <th class="p-4 font-bold uppercase tracking-wider text-xs text-center">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="testTableBody" class="text-sm divide-y divide-slate-100">
+                        <tr>
+                            <td colspan="9" class="p-8 text-center text-slate-400">Nenhum teste registrado para comparação. Preencha o formulário acima para iniciar.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-8 flex justify-end">
+                <button onclick="generateDashboard()" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3.5 rounded-lg font-bold shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 text-base">
+                    <i class="ph ph-chart-bar text-2xl"></i> Gerar Relatório Comparativo
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Dashboard / Relatório Final -->
+    <section id="dashboardSection" class="max-w-6xl mx-auto mt-8 px-4 hidden">
+        
+        <!-- Ações do Relatório -->
+        <div class="flex justify-between items-center mb-6 no-print">
+            <button onclick="backToEdit()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-5 py-2.5 rounded-lg font-semibold transition flex items-center gap-2 border border-slate-300">
+                <i class="ph ph-arrow-left"></i> Voltar à Edição
+            </button>
+            <div class="flex items-center gap-3">
+                <button onclick="downloadPNG()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg font-bold shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2">
+                    <i class="ph ph-image text-xl"></i> Baixar PNG
+                </button>
+                <button onclick="downloadPDF()" class="bg-rose-600 hover:bg-rose-700 text-white px-6 py-2.5 rounded-lg font-bold shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2">
+                    <i class="ph ph-file-pdf text-xl"></i> Baixar PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Conteúdo a ser impresso/exportado -->
+        <div id="exportableContent" class="bg-white p-10 rounded-xl shadow-lg border border-slate-200">
+            
+            <div class="flex items-center justify-center gap-8 mb-10 border-b border-slate-200 pb-8">
+                <img src="https://i.imgur.com/wEozr34.png" alt="Logo Oásis" class="h-24 w-auto object-contain border-none">
+                <div class="text-left">
+                    <h2 class="text-3xl font-bold text-oasis-deep tracking-tight">Relatório Comparativo de Eficiência</h2>
+                    <h3 class="text-xl text-slate-500 mt-1 font-light">Fazenda Oásis</h3>
+                    <p class="text-xs text-slate-400 mt-2 font-semibold tracking-wide uppercase" id="reportDate"></p>
+                </div>
+            </div>
+
+            <!-- Resumo e Observação (Conclusão) -->
+            <div class="bg-emerald-50/40 p-6 rounded-xl border border-emerald-100 mb-10">
+                <h4 class="font-bold text-oasis-dark flex items-center gap-2 mb-3 text-lg">
+                    <i class="ph ph-trophy text-amber-500 text-2xl"></i> Análise Geral do Rendimento
+                </h4>
+                <p id="conclusionText" class="text-slate-700 leading-relaxed text-base"></p>
+            </div>
+
+            <!-- Gráficos Dashboard -->
+            <div id="dashboardChartsContainer" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                    <h4 class="text-center text-sm font-bold text-slate-800 mb-4">Rendimento por Teste (Kg)</h4>
+                    <div class="relative h-72 w-full">
+                        <canvas id="dashboardBarChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 flex flex-col items-center">
+                    <h4 class="text-center text-sm font-bold text-slate-800 mb-4">Distribuição do Rendimento</h4>
+                    <div class="relative h-72 w-full max-w-[350px]">
+                        <canvas id="dashboardPieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-lg border border-slate-200">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-oasis text-white text-sm">
+                            <th class="p-4 border border-slate-300">Bloco</th>
+                            <th class="p-4 border border-slate-300">Teste</th>
+                            <th class="p-4 border border-slate-300">Aplicação</th>
+                            <th class="p-4 border border-slate-300">Cultura/Var.</th>
+                            <th class="p-4 border border-slate-300 text-center">Mudas</th>
+                            <th class="p-4 border border-slate-300 text-center">Unidades</th>
+                            <th class="p-4 border border-slate-300 text-center">Média(g)</th>
+                            <th class="p-4 border border-slate-300 font-bold bg-oasis-dark text-right">Total Kg</th>
+                            <th class="p-4 border border-slate-300 font-bold bg-emerald-950 text-center">Eficiência (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="finalTableBody" class="text-sm divide-y divide-slate-200">
+                        <!-- Gerado via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-12 pt-8 border-t border-slate-200 flex justify-between items-center opacity-60">
+                <p class="text-xs text-slate-400">Fazenda Oásis - Controle e Monitoramento Interno</p>
+                <p class="text-xs text-slate-400">Eficiência calculada comparativamente.</p>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Registrar plugin de labels do Chart.js
+        Chart.register(ChartDataLabels);
+        
+        let testData = [];
+        let pBar, pPie, dBar, dPie; // Instâncias dos gráficos
+
+        // Exibe mensagem de feedback no lugar do alert()
+        function showNotification(message, type = 'error') {
+            const container = document.getElementById('notificationArea');
+            const icon = document.getElementById('notificationIcon');
+            const text = document.getElementById('notificationMessage');
+
+            container.className = "mb-6 p-4 rounded-lg border flex items-center gap-3 shadow-sm transition-all duration-300 ";
+            
+            if (type === 'success') {
+                container.classList.add('bg-emerald-50', 'border-emerald-200', 'text-emerald-800');
+                icon.className = "ph ph-check-circle text-emerald-600 text-2xl";
+            } else {
+                container.classList.add('bg-red-50', 'border-red-200', 'text-red-800');
+                icon.className = "ph ph-warning-circle text-red-600 text-2xl";
+            }
+
+            text.innerText = message;
+            container.classList.remove('hidden');
+
+            // Scroll suave até o topo para o usuário ver a notificação
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Esconde automaticamente após 6 segundos
+            setTimeout(() => {
+                container.classList.add('hidden');
+            }, 6000);
+        }
+
+        // Exibir ou ocultar inputs customizados
+        function toggleCustom(field) {
+            const select = document.getElementById(field);
+            const customContainer = document.getElementById(field + 'CustomContainer');
+            if (select.value === 'outro') {
+                customContainer.classList.remove('hidden');
+                document.getElementById(field + 'Custom').required = true;
+            } else {
+                customContainer.classList.add('hidden');
+                document.getElementById(field + 'Custom').required = false;
+                document.getElementById(field + 'Custom').value = '';
+            }
+        }
+
+        // Obter valor final (select ou customizado)
+        function getFinalValue(field) {
+            const select = document.getElementById(field);
+            if (!select) return '';
+            
+            if (select.value === 'outro') {
+                return document.getElementById(field + 'Custom').value || 'N/A';
+            }
+            // Formatação do bloco amigável
+            if (field === 'bloco') {
+                return select.value ? select.value : 'N/A';
+            }
+            return select.value || 'N/A';
+        }
+
+        // Calcular automaticamente os Kgs totais da colheita
+        function calcularTotalKg() {
+            const unidades = parseFloat(document.getElementById('unidadesColhidas').value) || 0;
+            const mediaGrama = parseFloat(document.getElementById('mediaGrama').value) || 0;
+            const total = (unidades * mediaGrama) / 1000;
+            document.getElementById('totalKg').value = total.toFixed(2);
+        }
+
         // Adicionar um teste à lista
         function addTest() {
             // Validações básicas
@@ -109,60 +419,102 @@
             const mediaGrama = document.getElementById('mediaGrama').value;
             const totalKg = document.getElementById('totalKg').value;
 
+            // Pega blocos, culturas e variedades validados
+            const blocoVal = getFinalValue('bloco');
+            const culturaVal = getFinalValue('cultura');
+            const variedadeVal = getFinalValue('variedade');
+
+            if (!blocoVal || blocoVal === 'N/A' || !culturaVal || culturaVal === 'N/A' || !variedadeVal || variedadeVal === 'N/A') {
+                showNotification("Por favor, preencha os dados de Bloco, Cultura e Variedade antes de registrar o teste.");
+                return;
+            }
+
             if (!aplicacao || !numTeste || !quantidade || !totalMudas || !unidadesColhidas || !mediaGrama) {
-                alert("Por favor, preencha todos os campos obrigatórios (Aplicação, Nº Teste, Quantidade e Dados da Colheita).");
+                showNotification("Por favor, preencha todos os campos obrigatórios e dados da colheita.");
                 return;
             }
 
             const novoTeste = {
                 id: Date.now(),
-                bloco: getFinalValue('bloco') || 'N/A',
+                bloco: blocoVal,
                 aplicacao: aplicacao,
                 numTeste: numTeste,
-                cultura: getFinalValue('cultura') || 'N/A',
-                variedade: getFinalValue('variedade') || 'N/A',
+                cultura: culturaVal,
+                variedade: variedadeVal,
                 quantidade: parseFloat(quantidade),
                 unidade: getFinalValue('unidade') || 'N/A',
                 totalMudas: parseInt(totalMudas),
                 unidadesColhidas: parseInt(unidadesColhidas),
                 mediaGrama: parseFloat(mediaGrama),
                 totalKg: parseFloat(totalKg),
-                eficiencia: 0 // Calculado posteriormente
+                eficiencia: 0 
             };
 
             testData.push(novoTeste);
+            recalculateEfficiency(); // Atualizar os Kgs máximos para gráficos logo no histórico
             
             // ORDENAR ALFABETICAMENTE PELO BLOCO
             testData.sort((a, b) => a.bloco.toString().localeCompare(b.bloco.toString(), undefined, {numeric: true, sensitivity: 'base'}));
 
             updatePreviewTable();
+            updateCharts(); // Atualizar gráficos sempre que add
             document.getElementById('testForm').reset();
             
             // Esconder campos customizados após reset
-<!-- ... existing code ... -->
+            ['bloco', 'cultura', 'variedade', 'unidade'].forEach(field => {
+                document.getElementById(field + 'CustomContainer').classList.add('hidden');
+            });
+            
+            document.getElementById('totalKg').value = '';
+            showNotification("Teste adicionado com sucesso!", "success");
+        }
+
+        // Remover teste
+        function removeTest(id) {
+            testData = testData.filter(test => test.id !== id);
+            recalculateEfficiency(); // Recalcular ao remover
+            updatePreviewTable();
+            updateCharts(); // Atualizar gráficos ao remover
+            showNotification("Registro removido com sucesso.", "success");
+        }
+
         // Atualizar tabela de rascunho (Preview)
         function updatePreviewTable() {
             const tbody = document.getElementById('testTableBody');
+            const counter = document.getElementById('testCounter');
+            const chartsContainer = document.getElementById('previewChartsContainer');
+            
             tbody.innerHTML = '';
+            counter.innerText = `${testData.length} Registro(s)`;
 
             if (testData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-gray-400">Nenhum teste adicionado ainda.</td></tr>`;
+                chartsContainer.classList.add('hidden'); // Ocultar gráficos se não houver dados
+                tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400">Nenhum teste registrado para comparação. Preencha o formulário acima para iniciar.</td></tr>`;
                 return;
             }
+            
+            chartsContainer.classList.remove('hidden'); // Mostrar gráficos
 
             testData.forEach(test => {
                 const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/80 transition-colors";
                 tr.innerHTML = `
-                    <td class="p-3 font-medium">Blc ${test.bloco}</td>
-                    <td class="p-3">${test.numTeste}</td>
-                    <td class="p-3">${test.aplicacao}</td>
-                    <td class="p-3">${test.cultura} - ${test.variedade}</td>
-                    <td class="p-3">${test.quantidade} ${test.unidade}</td>
-                    <td class="p-3">${test.totalMudas}</td>
-                    <td class="p-3">${test.unidadesColhidas} un / ${test.mediaGrama}g</td>
-                    <td class="p-3 font-bold text-green-700">${test.totalKg.toFixed(2)} Kg</td>
-                    <td class="p-3 text-center">
-                        <button onclick="removeTest(${test.id})" class="text-red-500 hover:text-red-700" title="Remover">
+                    <td class="p-4 font-semibold text-slate-700">Bloco ${test.bloco}</td>
+                    <td class="p-4 text-slate-600">${test.numTeste}</td>
+                    <td class="p-4 font-medium text-slate-800">${test.aplicacao}</td>
+                    <td class="p-4 text-slate-600">
+                        <span class="font-medium text-slate-800">${test.cultura}</span>
+                        <div class="text-xs text-slate-500">${test.variedade}</div>
+                    </td>
+                    <td class="p-4 text-slate-600">${test.quantidade} ${test.unidade}</td>
+                    <td class="p-4 text-slate-600 text-center">${test.totalMudas}</td>
+                    <td class="p-4 text-slate-600">
+                        <div class="font-medium text-slate-800">${test.unidadesColhidas} un</div>
+                        <div class="text-xs text-slate-500">${test.mediaGrama}g</div>
+                    </td>
+                    <td class="p-4 font-bold text-emerald-600">${test.totalKg.toFixed(2)} Kg</td>
+                    <td class="p-4 text-center">
+                        <button onclick="removeTest(${test.id})" class="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50 transition-colors" title="Remover">
                             <i class="ph ph-trash text-lg"></i>
                         </button>
                     </td>
@@ -172,35 +524,322 @@
         }
 
         // Gerar o Relatório Final (Dashboard)
-<!-- ... existing code ... -->
+        function generateDashboard() {
+            if (testData.length === 0) {
+                showNotification("Adicione pelo menos um teste antes de gerar o relatório comparativo final.");
+                return;
+            }
+
+            recalculateEfficiency();
+            populateFinalTable();
+            generateConclusion();
+            
+            document.getElementById('dashboardChartsContainer').classList.remove('hidden');
+            updateCharts(); // Assegurar que dashboard tem os charts mais atualizados
+
+            document.getElementById('inputSection').classList.add('hidden');
+            document.getElementById('dashboardSection').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Recalcular Eficiência Geral
+        function recalculateEfficiency() {
+            if (testData.length === 0) return;
+            const maxKg = Math.max(...testData.map(t => t.totalKg));
+            testData = testData.map(test => {
+                let calcEficiencia = maxKg > 0 ? (test.totalKg / maxKg) * 100 : 0;
+                return {
+                    ...test,
+                    eficiencia: parseFloat(calcEficiencia.toFixed(2))
+                };
+            });
+        }
+
+        // Funções Gráficas
+        function calculateTrendLine(data) {
+            let n = data.length;
+            if (n <= 1) return data;
+            let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+            for (let i = 0; i < n; i++) {
+                sumX += i; sumY += data[i];
+                sumXY += i * data[i]; sumXX += i * i;
+            }
+            let m = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+            let b = (sumY - m * sumX) / n;
+            return data.map((_, i) => m * i + b);
+        }
+
+        function createGradient(ctx, area) {
+            if (!area) return '#10b981';
+            const gradient = ctx.createLinearGradient(0, area.bottom, 0, area.top);
+            gradient.addColorStop(0, '#047857'); // oasis-dark
+            gradient.addColorStop(0.5, '#10b981'); // oasis-default
+            gradient.addColorStop(1, '#6ee7b7'); // light green
+            return gradient;
+        }
+
+        function getChartConfigs() {
+            const labels = testData.map(t => `B${t.bloco} (${t.numTeste})`);
+            const dataKg = testData.map(t => t.totalKg);
+            const trendData = calculateTrendLine(dataKg);
+            const pieColors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#64748b'];
+
+            const barConfig = {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: 'Tendência',
+                            data: trendData,
+                            borderColor: '#f43f5e',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: false,
+                            datalabels: { display: false }
+                        },
+                        {
+                            type: 'bar',
+                            label: 'Total Kg',
+                            data: dataKg,
+                            backgroundColor: function(context) {
+                                const chart = context.chart;
+                                const {ctx, chartArea} = chart;
+                                return createGradient(ctx, chartArea);
+                            },
+                            borderRadius: 6,
+                            borderWidth: 1,
+                            borderColor: '#047857',
+                            datalabels: {
+                                align: 'end',
+                                anchor: 'end',
+                                color: '#064e3b',
+                                font: { weight: 'bold' },
+                                formatter: function(value) {
+                                    return value.toFixed(1) + 'kg';
+                                }
+                            }
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: { top: 30 } },
+                    plugins: {
+                        legend: { display: true, position: 'bottom' },
+                        tooltip: { mode: 'index', intersect: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { borderDash: [4, 4] } }
+                    }
+                }
+            };
+
+            const pieConfig = {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: dataKg,
+                        backgroundColor: pieColors.slice(0, dataKg.length),
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { boxWidth: 12, font: { size: 10 } } },
+                        datalabels: {
+                            color: '#fff',
+                            font: { weight: 'bold', size: 11 },
+                            formatter: (value, ctx) => {
+                                let sum = 0;
+                                let dataArr = ctx.chart.data.datasets[0].data;
+                                dataArr.map(data => { sum += data; });
+                                let percentage = (value * 100 / sum).toFixed(0) + "%";
+                                return percentage;
+                            }
+                        }
+                    }
+                }
+            };
+
+            return { barConfig, pieConfig };
+        }
+
+        function updateCharts() {
+            if (testData.length === 0) return;
+
+            // Pega configurações limpas duas vezes para evitar clone issues com funções do Chart.js
+            const previewConfigs = getChartConfigs();
+            const dashboardConfigs = getChartConfigs(); 
+
+            // Atualiza Gráficos de Histórico
+            if (pBar) pBar.destroy();
+            pBar = new Chart(document.getElementById('previewBarChart').getContext('2d'), previewConfigs.barConfig);
+            if (pPie) pPie.destroy();
+            pPie = new Chart(document.getElementById('previewPieChart').getContext('2d'), previewConfigs.pieConfig);
+
+            // Atualiza Gráficos do Dashboard
+            if (dBar) dBar.destroy();
+            dBar = new Chart(document.getElementById('dashboardBarChart').getContext('2d'), dashboardConfigs.barConfig);
+            if (dPie) dPie.destroy();
+            dPie = new Chart(document.getElementById('dashboardPieChart').getContext('2d'), dashboardConfigs.pieConfig);
+        }
+
+        // Preencher Tabela Final
         function populateFinalTable() {
             const tbody = document.getElementById('finalTableBody');
             tbody.innerHTML = '';
             
-            // Os dados já estão ordenados por Bloco desde a inserção (addTest)
-            // Entao usamos testData diretamente para manter a ordem alfabética/numérica
             const sortedData = testData;
 
             sortedData.forEach((test, index) => {
                 const tr = document.createElement('tr');
+                tr.className = "transition-colors";
+                
                 // Destacar o vencedor com fundo levemente verde
-                if(test.eficiencia === 100) tr.classList.add('bg-green-50'); 
-                else if (index % 2 === 0) tr.classList.add('bg-gray-50');
+                if(test.eficiencia === 100) {
+                    tr.classList.add('bg-emerald-50/60');
+                } else if (index % 2 === 0) {
+                    tr.classList.add('bg-slate-50/50');
+                }
 
                 tr.innerHTML = `
-                    <td class="p-3 border border-gray-200">Bloco ${test.bloco}</td>
-                    <td class="p-3 border border-gray-200">${test.numTeste}</td>
-                    <td class="p-3 border border-gray-200 font-medium">${test.aplicacao}</td>
-                    <td class="p-3 border border-gray-200">${test.cultura}<br><span class="text-xs text-gray-500">${test.variedade}</span></td>
-                    <td class="p-3 border border-gray-200">${test.totalMudas}</td>
-                    <td class="p-3 border border-gray-200">${test.unidadesColhidas}</td>
-                    <td class="p-3 border border-gray-200">${test.mediaGrama}</td>
-                    <td class="p-3 border border-gray-200 font-bold text-gray-800">${test.totalKg.toFixed(2)} Kg</td>
-                    <td class="p-3 border border-gray-200 font-bold ${test.eficiencia === 100 ? 'text-green-700' : 'text-gray-800'}">${test.eficiencia}%</td>
+                    <td class="p-4 border border-slate-200 font-bold text-slate-700 whitespace-nowrap">Bloco ${test.bloco}</td>
+                    <td class="p-4 border border-slate-200 text-slate-600 font-medium">${test.numTeste}</td>
+                    <td class="p-4 border border-slate-200 font-semibold text-slate-800">${test.aplicacao}</td>
+                    <td class="p-4 border border-slate-200 text-slate-700">
+                        <span class="font-bold">${test.cultura}</span>
+                        <br>
+                        <span class="text-xs text-slate-500 font-medium">${test.variedade}</span>
+                    </td>
+                    <td class="p-4 border border-slate-200 text-center text-slate-600 font-medium">${test.totalMudas}</td>
+                    <td class="p-4 border border-slate-200 text-center text-slate-700 font-bold">${test.unidadesColhidas}</td>
+                    <td class="p-4 border border-slate-200 text-center text-slate-600">${test.mediaGrama} g</td>
+                    <td class="p-4 border border-slate-200 font-extrabold text-slate-800 text-right bg-slate-50/40">${test.totalKg.toFixed(2)} Kg</td>
+                    <td class="p-4 border border-slate-200 font-extrabold text-center ${test.eficiencia === 100 ? 'text-emerald-700 text-base bg-emerald-100/40' : 'text-slate-700'}">${test.eficiencia}%</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
+        // Gerar Conclusão Escrita
         function generateConclusion() {
-<!-- ... existing code ... -->
+            const bestTest = testData.find(t => t.eficiencia === 100);
+            const dataAtual = new Date().toLocaleDateString('pt-BR');
+            
+            document.getElementById('reportDate').innerText = `Data de emissão: ${dataAtual}`;
+            
+            if (bestTest) {
+                let conclusion = `Avaliando os dados registrados nesta temporada agrícola, o desempenho de rendimento máximo foi conquistado no <strong>Bloco ${bestTest.bloco} (Teste ${bestTest.numTeste})</strong>. `;
+                conclusion += `O manejo empregou <strong>${bestTest.aplicacao}</strong> na cultura de <strong>${bestTest.cultura} (${bestTest.variedade})</strong>, alcançando um rendimento de colheita absoluto de <strong>${bestTest.totalKg.toFixed(2)} Kg</strong>. `;
+                conclusion += `Isso equivaleu a <strong>${bestTest.unidadesColhidas} unidades</strong> colhidas com excelente peso médio de <strong>${bestTest.mediaGrama}g</strong> por cabeça. `;
+                conclusion += `Todos os índices de eficiência dos demais blocos foram calculados e normalizados em formato comparativo e percentual em relação a este pico produtivo (100% de eficiência).`;
+                document.getElementById('conclusionText').innerHTML = conclusion;
+            }
+        }
+
+        // Retornar à tela de edição
+        function backToEdit() {
+            document.getElementById('dashboardSection').classList.add('hidden');
+            document.getElementById('inputSection').classList.remove('hidden');
+            updateCharts(); // Re-renderizar canvas para corrigir possíveis issues de redimensionamento
+        }
+
+        // Exportar / PDF
+        function downloadPDF() {
+            showNotification("Gerando arquivo PDF... Por favor, aguarde.", "success");
+            const element = document.getElementById('exportableContent');
+            
+            // Tática para evitar "página em branco": trazer o scroll para o topo
+            window.scrollTo({ top: 0, behavior: 'instant' });
+
+            // Pequeno delay para garantir que a renderização do scroll foi aplicada na tela
+            setTimeout(async () => {
+                try {
+                    const canvas = await html2canvas(element, {
+                        scale: 2, // Maior qualidade
+                        useCORS: true,
+                        logging: false,
+                        scrollY: 0
+                    });
+
+                    const imgData = canvas.toDataURL('image/png');
+                    const { jsPDF } = window.jspdf;
+                    
+                    // Configurando PDF formato A4 Paisagem
+                    const pdf = new jsPDF({
+                        orientation: 'landscape',
+                        unit: 'mm',
+                        format: 'a4'
+                    });
+
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = pdf.internal.pageSize.getHeight();
+                    const imgProps = pdf.getImageProperties(imgData);
+                    
+                    // Ajuste de margens (10mm)
+                    const margin = 10;
+                    const availableWidth = pdfWidth - (margin * 2);
+                    const availableHeight = pdfHeight - (margin * 2);
+                    
+                    // Calcular proporção para não distorcer a imagem
+                    let renderWidth = availableWidth;
+                    let renderHeight = (imgProps.height * renderWidth) / imgProps.width;
+
+                    // Se a altura passar da folha, baseamos a escala na altura
+                    if (renderHeight > availableHeight) {
+                        renderHeight = availableHeight;
+                        renderWidth = (imgProps.width * renderHeight) / imgProps.height;
+                    }
+
+                    // Centralizar na página
+                    const x = margin + (availableWidth - renderWidth) / 2;
+                    const y = margin + (availableHeight - renderHeight) / 2;
+
+                    pdf.addImage(imgData, 'PNG', x, y, renderWidth, renderHeight);
+                    pdf.save(`relatorio_eficiencia_${new Date().getTime()}.pdf`);
+                    
+                } catch (error) {
+                    console.error("Erro ao gerar PDF:", error);
+                    showNotification("Erro ao gerar PDF. Tente novamente.", "error");
+                }
+            }, 150);
+        }
+
+        // Exportar / PNG
+        function downloadPNG() {
+            showNotification("Gerando arquivo de imagem PNG... Por favor, aguarde.", "success");
+            const element = document.getElementById('exportableContent');
+            
+            // Tática para evitar "página em branco" na imagem
+            window.scrollTo({ top: 0, behavior: 'instant' });
+
+            setTimeout(async () => {
+                try {
+                    const canvas = await html2canvas(element, { 
+                        scale: 2, 
+                        useCORS: true,
+                        logging: false,
+                        scrollY: 0
+                    });
+                    
+                    const link = document.createElement('a');
+                    link.download = `relatorio_eficiencia_${new Date().getTime()}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                } catch (err) {
+                    console.error("Erro ao gerar imagem:", err);
+                    showNotification("Erro ao gerar imagem.", "error");
+                }
+            }, 150);
+        }
+    </script>
+</body>
+</html>
