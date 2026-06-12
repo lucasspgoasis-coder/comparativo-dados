@@ -31,6 +31,22 @@
             border-color: #10b981;
             box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
         }
+        /* Scrollbar customizada para tabelas e gráficos */
+        .export-unscroll::-webkit-scrollbar {
+            height: 8px;
+        }
+        .export-unscroll::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+            border-radius: 4px;
+        }
+        .export-unscroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        .export-unscroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
         @media print {
             body { background-color: white; }
             .no-print { display: none !important; }
@@ -207,33 +223,35 @@
             </div>
             
             <!-- Gráficos Histórico (Preview) -->
-            <div id="previewChartsContainer" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col">
+            <div id="previewChartsContainer" class="hidden flex flex-col gap-8 mb-8">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden w-full">
                     <h4 class="text-center text-sm font-bold text-slate-700 mb-4">Métricas por Bloco</h4>
-                    <div class="flex-grow relative h-64 w-full">
-                        <canvas id="previewBarChart"></canvas>
+                    <div class="w-full overflow-x-auto export-unscroll pb-2">
+                        <div class="relative h-80" id="previewBarChartSizer" style="min-width: 100%;">
+                            <canvas id="previewBarChart"></canvas>
+                        </div>
                     </div>
                 </div>
-                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center w-full">
                     <h4 class="text-center text-sm font-bold text-slate-700 mb-4">Proporção de Colheita (Kg)</h4>
-                    <div class="flex-grow relative h-64 w-full max-w-[300px]">
+                    <div class="relative h-64 w-full max-w-[400px]">
                         <canvas id="previewPieChart"></canvas>
                     </div>
                 </div>
             </div>
 
-            <div class="overflow-x-auto rounded-lg border border-slate-200 shadow-sm">
+            <div class="overflow-x-auto export-unscroll rounded-lg border border-slate-200 shadow-sm">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-slate-50 text-slate-600 text-sm border-b border-slate-200">
-                            <th class="p-4 font-bold uppercase tracking-wider text-xs">Bloco</th>
-                            <th class="p-4 font-bold uppercase tracking-wider text-xs">Nº Teste</th>
+                            <th class="p-4 font-bold uppercase tracking-wider text-xs whitespace-nowrap">Bloco</th>
+                            <th class="p-4 font-bold uppercase tracking-wider text-xs whitespace-nowrap">Nº Teste</th>
                             <th class="p-4 font-bold uppercase tracking-wider text-xs">Aplicação</th>
                             <th class="p-4 font-bold uppercase tracking-wider text-xs">Cultura / Var.</th>
-                            <th class="p-4 font-bold uppercase tracking-wider text-xs">Dosagem</th>
-                            <th class="p-4 font-bold uppercase tracking-wider text-xs">Mudas</th>
-                            <th class="p-4 font-bold uppercase tracking-wider text-xs">Colheita (Un/g)</th>
-                            <th class="p-4 font-bold uppercase tracking-wider text-xs">Total Kg</th>
+                            <th class="p-4 font-bold uppercase tracking-wider text-xs whitespace-nowrap">Dosagem</th>
+                            <th class="p-4 font-bold uppercase tracking-wider text-xs whitespace-nowrap text-center">Mudas</th>
+                            <th class="p-4 font-bold uppercase tracking-wider text-xs whitespace-nowrap text-center">Colheita (Un/g)</th>
+                            <th class="p-4 font-bold uppercase tracking-wider text-xs whitespace-nowrap text-right">Total Kg</th>
                             <th class="p-4 font-bold uppercase tracking-wider text-xs text-center">Ação</th>
                         </tr>
                     </thead>
@@ -263,7 +281,7 @@
             </button>
             <div class="flex items-center gap-3">
                 <button onclick="downloadPNG()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg font-bold shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2">
-                    <i class="ph ph-image text-xl"></i> Baixar PNG
+                    <i class="ph ph-image text-xl"></i> Baixar Imagem (PNG/JPEG)
                 </button>
                 <button onclick="downloadPDF()" class="bg-rose-600 hover:bg-rose-700 text-white px-6 py-2.5 rounded-lg font-bold shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2">
                     <i class="ph ph-file-pdf text-xl"></i> Baixar PDF
@@ -272,7 +290,7 @@
         </div>
 
         <!-- Conteúdo a ser impresso/exportado -->
-        <div id="exportableContent" class="bg-white p-10 rounded-xl shadow-lg border border-slate-200">
+        <div id="exportableContent" class="bg-white p-10 rounded-xl shadow-lg border border-slate-200 mx-auto" style="transition: all 0s;">
             
             <div class="flex items-center justify-center gap-8 mb-10 border-b border-slate-200 pb-8">
                 <img src="https://i.imgur.com/wEozr34.png" alt="Logo Oásis" class="h-24 w-auto object-contain border-none">
@@ -292,34 +310,39 @@
             </div>
 
             <!-- Gráficos Dashboard -->
-            <div id="dashboardChartsContainer" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+            <div id="dashboardChartsContainer" class="hidden flex flex-col gap-10 mb-10">
+                <!-- Gráfico em barra com container expansível -->
+                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 flex flex-col overflow-hidden w-full">
                     <h4 class="text-center text-sm font-bold text-slate-800 mb-4">Evolução de Métricas por Teste</h4>
-                    <div class="relative h-72 w-full">
-                        <canvas id="dashboardBarChart"></canvas>
+                    <div class="w-full overflow-x-auto export-unscroll pb-4 flex-grow">
+                        <div class="relative h-96" id="dashboardBarChartSizer" style="min-width: 100%;">
+                            <canvas id="dashboardBarChart"></canvas>
+                        </div>
                     </div>
                 </div>
-                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 flex flex-col items-center">
+                <!-- Gráfico de Pizza -->
+                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 flex flex-col items-center justify-center w-full">
                     <h4 class="text-center text-sm font-bold text-slate-800 mb-4">Distribuição do Rendimento (Kg)</h4>
-                    <div class="relative h-72 w-full max-w-[350px]">
+                    <div class="relative h-80 w-full max-w-[450px]">
                         <canvas id="dashboardPieChart"></canvas>
                     </div>
                 </div>
             </div>
 
-            <div class="overflow-x-auto rounded-lg border border-slate-200">
+            <!-- Tabela de Resultados Final -->
+            <div class="overflow-x-auto export-unscroll rounded-lg border border-slate-200 w-full pb-2">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-oasis text-white text-sm">
-                            <th class="p-4 border border-slate-300">Bloco</th>
-                            <th class="p-4 border border-slate-300">Teste</th>
+                            <th class="p-4 border border-slate-300 whitespace-nowrap">Bloco</th>
+                            <th class="p-4 border border-slate-300 whitespace-nowrap">Teste</th>
                             <th class="p-4 border border-slate-300">Aplicação</th>
                             <th class="p-4 border border-slate-300">Cultura/Var.</th>
-                            <th class="p-4 border border-slate-300 text-center">Mudas</th>
-                            <th class="p-4 border border-slate-300 text-center">Unidades</th>
-                            <th class="p-4 border border-slate-300 text-center">Média(g)</th>
-                            <th class="p-4 border border-slate-300 font-bold bg-oasis-dark text-right">Total Kg</th>
-                            <th class="p-4 border border-slate-300 font-bold bg-emerald-950 text-center">Eficiência (%)</th>
+                            <th class="p-4 border border-slate-300 text-center whitespace-nowrap">Mudas</th>
+                            <th class="p-4 border border-slate-300 text-center whitespace-nowrap">Unidades</th>
+                            <th class="p-4 border border-slate-300 text-center whitespace-nowrap">Média(g)</th>
+                            <th class="p-4 border border-slate-300 font-bold bg-oasis-dark text-right whitespace-nowrap">Total Kg</th>
+                            <th class="p-4 border border-slate-300 font-bold bg-emerald-950 text-center whitespace-nowrap">Eficiência (%)</th>
                         </tr>
                     </thead>
                     <tbody id="finalTableBody" class="text-sm divide-y divide-slate-200">
@@ -340,9 +363,8 @@
         Chart.register(ChartDataLabels);
         
         let testData = [];
-        let pBar, pPie, dBar, dPie; // Instâncias dos gráficos
+        let pBar, pPie, dBar, dPie; 
 
-        // Exibe mensagem de feedback no lugar do alert()
         function showNotification(message, type = 'error') {
             const container = document.getElementById('notificationArea');
             const icon = document.getElementById('notificationIcon');
@@ -361,16 +383,13 @@
             text.innerText = message;
             container.classList.remove('hidden');
 
-            // Scroll suave até o topo para o usuário ver a notificação
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
-            // Esconde automaticamente após 6 segundos
             setTimeout(() => {
                 container.classList.add('hidden');
             }, 6000);
         }
 
-        // Exibir ou ocultar inputs customizados
         function toggleCustom(field) {
             const select = document.getElementById(field);
             const customContainer = document.getElementById(field + 'CustomContainer');
@@ -384,7 +403,6 @@
             }
         }
 
-        // Obter valor final (select ou customizado)
         function getFinalValue(field) {
             const select = document.getElementById(field);
             if (!select) return '';
@@ -392,14 +410,12 @@
             if (select.value === 'outro') {
                 return document.getElementById(field + 'Custom').value || 'N/A';
             }
-            // Formatação do bloco amigável
             if (field === 'bloco') {
                 return select.value ? select.value : 'N/A';
             }
             return select.value || 'N/A';
         }
 
-        // Calcular automaticamente os Kgs totais da colheita
         function calcularTotalKg() {
             const unidades = parseFloat(document.getElementById('unidadesColhidas').value) || 0;
             const mediaGrama = parseFloat(document.getElementById('mediaGrama').value) || 0;
@@ -407,9 +423,7 @@
             document.getElementById('totalKg').value = total.toFixed(2);
         }
 
-        // Adicionar um teste à lista
         function addTest() {
-            // Validações básicas
             const aplicacao = document.getElementById('aplicacao').value;
             const numTeste = document.getElementById('numTeste').value;
             const quantidade = document.getElementById('quantidade').value;
@@ -418,7 +432,6 @@
             const mediaGrama = document.getElementById('mediaGrama').value;
             const totalKg = document.getElementById('totalKg').value;
 
-            // Pega blocos, culturas e variedades validados
             const blocoVal = getFinalValue('bloco');
             const culturaVal = getFinalValue('cultura');
             const variedadeVal = getFinalValue('variedade');
@@ -450,16 +463,13 @@
             };
 
             testData.push(novoTeste);
-            recalculateEfficiency(); // Atualizar os Kgs máximos para gráficos logo no histórico
-            
-            // ORDENAR ALFABETICAMENTE PELO BLOCO
+            recalculateEfficiency(); 
             testData.sort((a, b) => a.bloco.toString().localeCompare(b.bloco.toString(), undefined, {numeric: true, sensitivity: 'base'}));
 
             updatePreviewTable();
-            updateCharts(); // Atualizar gráficos sempre que add
+            updateCharts(); 
             document.getElementById('testForm').reset();
             
-            // Esconder campos customizados após reset
             ['bloco', 'cultura', 'variedade', 'unidade'].forEach(field => {
                 document.getElementById(field + 'CustomContainer').classList.add('hidden');
             });
@@ -468,16 +478,14 @@
             showNotification("Teste adicionado com sucesso!", "success");
         }
 
-        // Remover teste
         function removeTest(id) {
             testData = testData.filter(test => test.id !== id);
-            recalculateEfficiency(); // Recalcular ao remover
+            recalculateEfficiency(); 
             updatePreviewTable();
-            updateCharts(); // Atualizar gráficos ao remover
+            updateCharts(); 
             showNotification("Registro removido com sucesso.", "success");
         }
 
-        // Atualizar tabela de rascunho (Preview)
         function updatePreviewTable() {
             const tbody = document.getElementById('testTableBody');
             const counter = document.getElementById('testCounter');
@@ -487,31 +495,31 @@
             counter.innerText = `${testData.length} Registro(s)`;
 
             if (testData.length === 0) {
-                chartsContainer.classList.add('hidden'); // Ocultar gráficos se não houver dados
+                chartsContainer.classList.add('hidden');
                 tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400">Nenhum teste registrado para comparação. Preencha o formulário acima para iniciar.</td></tr>`;
                 return;
             }
             
-            chartsContainer.classList.remove('hidden'); // Mostrar gráficos
+            chartsContainer.classList.remove('hidden');
 
             testData.forEach(test => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50/80 transition-colors";
                 tr.innerHTML = `
-                    <td class="p-4 font-semibold text-slate-700">Bloco ${test.bloco}</td>
-                    <td class="p-4 text-slate-600">${test.numTeste}</td>
+                    <td class="p-4 font-semibold text-slate-700 whitespace-nowrap">Bloco ${test.bloco}</td>
+                    <td class="p-4 text-slate-600 whitespace-nowrap">${test.numTeste}</td>
                     <td class="p-4 font-medium text-slate-800">${test.aplicacao}</td>
                     <td class="p-4 text-slate-600">
                         <span class="font-medium text-slate-800">${test.cultura}</span>
                         <div class="text-xs text-slate-500">${test.variedade}</div>
                     </td>
-                    <td class="p-4 text-slate-600">${test.quantidade} ${test.unidade}</td>
-                    <td class="p-4 text-slate-600 text-center">${test.totalMudas}</td>
-                    <td class="p-4 text-slate-600">
+                    <td class="p-4 text-slate-600 whitespace-nowrap">${test.quantidade} ${test.unidade}</td>
+                    <td class="p-4 text-slate-600 text-center whitespace-nowrap">${test.totalMudas}</td>
+                    <td class="p-4 text-slate-600 text-center whitespace-nowrap">
                         <div class="font-medium text-slate-800">${test.unidadesColhidas} un</div>
                         <div class="text-xs text-slate-500">${test.mediaGrama}g</div>
                     </td>
-                    <td class="p-4 font-bold text-emerald-600">${test.totalKg.toFixed(2)} Kg</td>
+                    <td class="p-4 font-bold text-emerald-600 text-right whitespace-nowrap">${test.totalKg.toFixed(2)} Kg</td>
                     <td class="p-4 text-center">
                         <button onclick="removeTest(${test.id})" class="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50 transition-colors" title="Remover">
                             <i class="ph ph-trash text-lg"></i>
@@ -522,7 +530,6 @@
             });
         }
 
-        // Gerar o Relatório Final (Dashboard)
         function generateDashboard() {
             if (testData.length === 0) {
                 showNotification("Adicione pelo menos um teste antes de gerar o relatório comparativo final.");
@@ -534,14 +541,13 @@
             generateConclusion();
             
             document.getElementById('dashboardChartsContainer').classList.remove('hidden');
-            updateCharts(); // Assegurar que dashboard tem os charts mais atualizados
+            updateCharts(); 
 
             document.getElementById('inputSection').classList.add('hidden');
             document.getElementById('dashboardSection').classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Recalcular Eficiência Geral
         function recalculateEfficiency() {
             if (testData.length === 0) return;
             const maxKg = Math.max(...testData.map(t => t.totalKg));
@@ -554,23 +560,21 @@
             });
         }
 
-        // Funções Gráficas
         function createGradient(ctx, area) {
             if (!area) return '#10b981';
             const gradient = ctx.createLinearGradient(0, area.bottom, 0, area.top);
-            gradient.addColorStop(0, '#047857'); // oasis-dark
-            gradient.addColorStop(0.5, '#10b981'); // oasis-default
-            gradient.addColorStop(1, '#6ee7b7'); // light green
+            gradient.addColorStop(0, '#047857'); 
+            gradient.addColorStop(0.5, '#10b981'); 
+            gradient.addColorStop(1, '#6ee7b7'); 
             return gradient;
         }
 
         function getChartConfigs() {
-            // Arrays dentro do map criam quebra de linha no rótulo do gráfico
             const labels = testData.map(t => [t.aplicacao, `B${t.bloco} (${t.numTeste})`]);
             const dataKg = testData.map(t => t.totalKg);
             const dataMediaG = testData.map(t => t.mediaGrama);
             const dataUnidades = testData.map(t => t.unidadesColhidas);
-            const pieColors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#64748b'];
+            const pieColors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#64748b', '#ef4444', '#14b8a6', '#f97316', '#a855f7'];
 
             const barConfig = {
                 type: 'bar',
@@ -580,28 +584,28 @@
                         {
                             type: 'line',
                             label: 'Evolução (Kg)',
-                            data: dataKg, // Usa os mesmos dados de Kg para ligar as barras
-                            borderColor: '#ea580c', // Laranja escuro vibrante
+                            data: dataKg, 
+                            borderColor: '#ea580c', 
                             backgroundColor: '#ea580c',
                             borderWidth: 3,
-                            tension: 0.4, // Linha suave
-                            pointRadius: 4, // Exibe o ponto no topo da barra
+                            tension: 0.4, 
+                            pointRadius: 4, 
                             pointBackgroundColor: '#fff',
                             pointBorderColor: '#ea580c',
                             pointBorderWidth: 2,
                             fill: false,
-                            yAxisID: 'y', // Usa o eixo principal
-                            datalabels: { display: false } // Sem dados escritos em cima da linha
+                            yAxisID: 'y', 
+                            datalabels: { display: false } 
                         },
                         {
-                            type: 'bar', // Alterado para barra
+                            type: 'bar', 
                             label: 'Média (g)',
                             data: dataMediaG,
-                            borderColor: '#fb923c', // Laranja claro
-                            backgroundColor: '#fed7aa', // Fundo Laranja claro
+                            borderColor: '#fb923c', 
+                            backgroundColor: '#fed7aa', 
                             borderWidth: 1,
-                            borderRadius: 4, // Cantos arredondados na barra
-                            yAxisID: 'y1', // Usa o eixo secundário
+                            borderRadius: 4, 
+                            yAxisID: 'y1', 
                             datalabels: { 
                                 display: true,
                                 align: 'end',
@@ -612,14 +616,14 @@
                             } 
                         },
                         {
-                            type: 'bar', // Alterado para barra
+                            type: 'bar', 
                             label: 'Unidades',
                             data: dataUnidades,
-                            borderColor: '#eab308', // Amarelo
-                            backgroundColor: '#fef08a', // Fundo Amarelo claro
+                            borderColor: '#eab308', 
+                            backgroundColor: '#fef08a', 
                             borderWidth: 1,
-                            borderRadius: 4, // Cantos arredondados na barra
-                            yAxisID: 'y1', // Usa o eixo secundário
+                            borderRadius: 4, 
+                            yAxisID: 'y1', 
                             datalabels: { 
                                 display: true,
                                 align: 'end',
@@ -641,7 +645,7 @@
                             borderRadius: 6,
                             borderWidth: 1,
                             borderColor: '#047857',
-                            yAxisID: 'y', // Usa o eixo principal
+                            yAxisID: 'y', 
                             datalabels: {
                                 align: 'end',
                                 anchor: 'end',
@@ -657,7 +661,7 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    layout: { padding: { top: 40 } }, // Aumentado para exibir todos os rótulos de topo
+                    layout: { padding: { top: 60, bottom: 10 } }, 
                     plugins: {
                         legend: { display: true, position: 'bottom' },
                         tooltip: { mode: 'index', intersect: false }
@@ -677,7 +681,7 @@
                             position: 'right',
                             beginAtZero: true,
                             title: { display: true, text: 'Unidades / Média (g)' },
-                            grid: { drawOnChartArea: false } // Evita conflito de linhas de malha
+                            grid: { drawOnChartArea: false } 
                         }
                     }
                 }
@@ -720,24 +724,29 @@
         function updateCharts() {
             if (testData.length === 0) return;
 
-            // Pega configurações limpas duas vezes para evitar clone issues com funções do Chart.js
+            // Ajuste leve de LARGURA: Apenas aumenta suavemente se necessário
+            const calculatedWidth = Math.max(100, testData.length * 60); 
+            
+            const prevBarSizer = document.getElementById('previewBarChartSizer');
+            if (prevBarSizer) prevBarSizer.style.minWidth = `max(100%, ${calculatedWidth}px)`;
+
+            const dashBarSizer = document.getElementById('dashboardBarChartSizer');
+            if (dashBarSizer) dashBarSizer.style.minWidth = `max(100%, ${calculatedWidth}px)`;
+
             const previewConfigs = getChartConfigs();
             const dashboardConfigs = getChartConfigs(); 
 
-            // Atualiza Gráficos de Histórico
             if (pBar) pBar.destroy();
             pBar = new Chart(document.getElementById('previewBarChart').getContext('2d'), previewConfigs.barConfig);
             if (pPie) pPie.destroy();
             pPie = new Chart(document.getElementById('previewPieChart').getContext('2d'), previewConfigs.pieConfig);
 
-            // Atualiza Gráficos do Dashboard
             if (dBar) dBar.destroy();
             dBar = new Chart(document.getElementById('dashboardBarChart').getContext('2d'), dashboardConfigs.barConfig);
             if (dPie) dPie.destroy();
             dPie = new Chart(document.getElementById('dashboardPieChart').getContext('2d'), dashboardConfigs.pieConfig);
         }
 
-        // Preencher Tabela Final
         function populateFinalTable() {
             const tbody = document.getElementById('finalTableBody');
             tbody.innerHTML = '';
@@ -748,7 +757,6 @@
                 const tr = document.createElement('tr');
                 tr.className = "transition-colors";
                 
-                // Destacar o vencedor com fundo levemente verde
                 if(test.eficiencia === 100) {
                     tr.classList.add('bg-emerald-50/60');
                 } else if (index % 2 === 0) {
@@ -757,24 +765,22 @@
 
                 tr.innerHTML = `
                     <td class="p-4 border border-slate-200 font-bold text-slate-700 whitespace-nowrap">Bloco ${test.bloco}</td>
-                    <td class="p-4 border border-slate-200 text-slate-600 font-medium">${test.numTeste}</td>
+                    <td class="p-4 border border-slate-200 text-slate-600 font-medium whitespace-nowrap">${test.numTeste}</td>
                     <td class="p-4 border border-slate-200 font-semibold text-slate-800">${test.aplicacao}</td>
                     <td class="p-4 border border-slate-200 text-slate-700">
-                        <span class="font-bold">${test.cultura}</span>
-                        <br>
+                        <span class="font-bold">${test.cultura}</span><br>
                         <span class="text-xs text-slate-500 font-medium">${test.variedade}</span>
                     </td>
-                    <td class="p-4 border border-slate-200 text-center text-slate-600 font-medium">${test.totalMudas}</td>
-                    <td class="p-4 border border-slate-200 text-center text-slate-700 font-bold">${test.unidadesColhidas}</td>
-                    <td class="p-4 border border-slate-200 text-center text-slate-600">${test.mediaGrama} g</td>
-                    <td class="p-4 border border-slate-200 font-extrabold text-slate-800 text-right bg-slate-50/40">${test.totalKg.toFixed(2)} Kg</td>
-                    <td class="p-4 border border-slate-200 font-extrabold text-center ${test.eficiencia === 100 ? 'text-emerald-700 text-base bg-emerald-100/40' : 'text-slate-700'}">${test.eficiencia}%</td>
+                    <td class="p-4 border border-slate-200 text-center text-slate-600 font-medium whitespace-nowrap">${test.totalMudas}</td>
+                    <td class="p-4 border border-slate-200 text-center text-slate-700 font-bold whitespace-nowrap">${test.unidadesColhidas}</td>
+                    <td class="p-4 border border-slate-200 text-center text-slate-600 whitespace-nowrap">${test.mediaGrama} g</td>
+                    <td class="p-4 border border-slate-200 font-extrabold text-slate-800 text-right bg-slate-50/40 whitespace-nowrap">${test.totalKg.toFixed(2)} Kg</td>
+                    <td class="p-4 border border-slate-200 font-extrabold text-center whitespace-nowrap ${test.eficiencia === 100 ? 'text-emerald-700 text-base bg-emerald-100/40' : 'text-slate-700'}">${test.eficiencia}%</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // Gerar Conclusão Escrita
         function generateConclusion() {
             const bestTest = testData.find(t => t.eficiencia === 100);
             const dataAtual = new Date().toLocaleDateString('pt-BR');
@@ -790,35 +796,68 @@
             }
         }
 
-        // Retornar à tela de edição
         function backToEdit() {
             document.getElementById('dashboardSection').classList.add('hidden');
             document.getElementById('inputSection').classList.remove('hidden');
-            updateCharts(); // Re-renderizar canvas para corrigir possíveis issues de redimensionamento
+            updateCharts(); 
         }
 
-        // Exportar / PDF
+        // --- MANIPULAÇÃO DOM PARA EXPORTAÇÃO (TAMANHO EQUILIBRADO) ---
+        function prepareForExport() {
+            const container = document.getElementById('exportableContent');
+            
+            // Fixa a largura num formato de monitor agradável. 
+            // Resolve o amasso original, sem o exagero de crescer infinito!
+            container.style.width = '1280px';
+            container.style.padding = '40px'; 
+            
+            // Tira restrições de rolagem só do gráfico de barra (caso passe de 1280px um dia)
+            const unscrolls = document.querySelectorAll('.export-unscroll');
+            unscrolls.forEach(el => {
+                el.classList.remove('overflow-x-auto');
+                el.style.overflow = 'visible';
+            });
+        }
+
+        function restoreAfterExport() {
+            const container = document.getElementById('exportableContent');
+            container.style.width = '';
+            container.style.padding = '';
+
+            const unscrolls = document.querySelectorAll('.export-unscroll');
+            unscrolls.forEach(el => {
+                el.classList.add('overflow-x-auto');
+                el.style.overflow = '';
+            });
+        }
+
+        // Exportar / PDF com quebra de página se necessário
         function downloadPDF() {
             showNotification("Gerando arquivo PDF... Por favor, aguarde.", "success");
-            const element = document.getElementById('exportableContent');
             
-            // Tática para evitar "página em branco": trazer o scroll para o topo
+            prepareForExport();
+
+            const element = document.getElementById('exportableContent');
             window.scrollTo({ top: 0, behavior: 'instant' });
 
-            // Pequeno delay para garantir que a renderização do scroll foi aplicada na tela
             setTimeout(async () => {
                 try {
+                    const exportWidth = element.scrollWidth;
+                    const exportHeight = element.scrollHeight;
+
                     const canvas = await html2canvas(element, {
-                        scale: 2, // Maior qualidade
+                        scale: 2, 
                         useCORS: true,
                         logging: false,
-                        scrollY: 0
+                        scrollY: 0,
+                        scrollX: 0,
+                        windowWidth: exportWidth,
+                        windowHeight: exportHeight
                     });
 
                     const imgData = canvas.toDataURL('image/png');
                     const { jsPDF } = window.jspdf;
                     
-                    // Configurando PDF formato A4 Paisagem
                     const pdf = new jsPDF({
                         orientation: 'landscape',
                         unit: 'mm',
@@ -829,61 +868,76 @@
                     const pdfHeight = pdf.internal.pageSize.getHeight();
                     const imgProps = pdf.getImageProperties(imgData);
                     
-                    // Ajuste de margens (10mm)
                     const margin = 10;
                     const availableWidth = pdfWidth - (margin * 2);
                     const availableHeight = pdfHeight - (margin * 2);
                     
-                    // Calcular proporção para não distorcer a imagem
-                    let renderWidth = availableWidth;
-                    let renderHeight = (imgProps.height * renderWidth) / imgProps.width;
+                    const renderWidth = availableWidth;
+                    const renderHeight = (imgProps.height * renderWidth) / imgProps.width;
 
-                    // Se a altura passar da folha, baseamos a escala na altura
-                    if (renderHeight > availableHeight) {
-                        renderHeight = availableHeight;
-                        renderWidth = (imgProps.width * renderHeight) / imgProps.height;
+                    let position = margin;
+                    let heightLeft = renderHeight;
+
+                    // Adiciona a primeira página
+                    pdf.addImage(imgData, 'PNG', margin, position, renderWidth, renderHeight);
+                    heightLeft -= availableHeight;
+
+                    // Quebra de folha
+                    while (heightLeft > 0) {
+                        position = position - availableHeight; 
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', margin, position, renderWidth, renderHeight);
+                        heightLeft -= availableHeight;
                     }
 
-                    // Centralizar na página
-                    const x = margin + (availableWidth - renderWidth) / 2;
-                    const y = margin + (availableHeight - renderHeight) / 2;
-
-                    pdf.addImage(imgData, 'PNG', x, y, renderWidth, renderHeight);
                     pdf.save(`relatorio_eficiencia_${new Date().getTime()}.pdf`);
                     
                 } catch (error) {
                     console.error("Erro ao gerar PDF:", error);
                     showNotification("Erro ao gerar PDF. Tente novamente.", "error");
+                } finally {
+                    restoreAfterExport();
                 }
-            }, 150);
+            }, 500); 
         }
 
         // Exportar / PNG
         function downloadPNG() {
-            showNotification("Gerando arquivo de imagem PNG... Por favor, aguarde.", "success");
-            const element = document.getElementById('exportableContent');
+            showNotification("Gerando arquivo de imagem PNG (JPEG)... Por favor, aguarde.", "success");
             
-            // Tática para evitar "página em branco" na imagem
+            prepareForExport();
+            
+            const element = document.getElementById('exportableContent');
             window.scrollTo({ top: 0, behavior: 'instant' });
 
             setTimeout(async () => {
                 try {
+                    const exportWidth = element.scrollWidth;
+                    const exportHeight = element.scrollHeight;
+
                     const canvas = await html2canvas(element, { 
                         scale: 2, 
                         useCORS: true,
                         logging: false,
-                        scrollY: 0
+                        scrollY: 0,
+                        scrollX: 0,
+                        windowWidth: exportWidth,
+                        windowHeight: exportHeight,
+                        width: exportWidth,
+                        height: exportHeight
                     });
                     
                     const link = document.createElement('a');
                     link.download = `relatorio_eficiencia_${new Date().getTime()}.png`;
-                    link.href = canvas.toDataURL('image/png');
+                    link.href = canvas.toDataURL('image/png'); 
                     link.click();
                 } catch (err) {
                     console.error("Erro ao gerar imagem:", err);
                     showNotification("Erro ao gerar imagem.", "error");
+                } finally {
+                    restoreAfterExport();
                 }
-            }, 150);
+            }, 500); 
         }
     </script>
 </body>
