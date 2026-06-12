@@ -1,0 +1,206 @@
+<!-- ... existing code ... -->
+<body class="text-gray-800 min-h-screen pb-12">
+
+    <!-- Header -->
+    <header class="bg-oasis-dark text-white p-6 shadow-md">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-5">
+                <img src="https://i.imgur.com/wEozr34.png" alt="Logo Oásis" class="h-16 w-auto object-contain border-none">
+                <div>
+                    <h1 class="text-3xl font-bold tracking-wide">Registro Comparativo De Eficiência</h1>
+                    <h2 class="text-xl font-light text-oasis-light mt-1 flex items-center gap-2">
+                        <i class="ph ph-plant"></i> Fazenda Oásis
+                    </h2>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto mt-8 px-4">
+<!-- ... existing code ... -->
+                    <!-- Unidade Custom -->
+                    <div id="unidadeCustomContainer" class="hidden col-span-1 md:col-span-2 lg:col-span-3">
+                        <input type="text" id="unidadeCustom" placeholder="Digite a unidade" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-oasis focus:border-oasis">
+                    </div>
+
+                    <!-- Dados da Colheita -->
+                    <div class="col-span-1 md:col-span-2 lg:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-4 bg-green-50 p-5 rounded-lg border border-green-200 mt-2">
+                        <h4 class="col-span-full font-bold text-oasis-dark flex items-center gap-2 text-lg mb-[-10px]">
+                            <i class="ph ph-scales"></i> Dados da Colheita
+                        </h4>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Total de Mudas</label>
+                            <input type="number" id="totalMudas" required placeholder="Ex: 600" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-oasis focus:border-oasis">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Unid. Colhidas</label>
+                            <input type="number" id="unidadesColhidas" oninput="calcularTotalKg()" required placeholder="Ex: 500" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-oasis focus:border-oasis">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Média (g) / Unid</label>
+                            <input type="number" step="0.1" id="mediaGrama" oninput="calcularTotalKg()" required placeholder="Ex: 450.5" class="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-oasis focus:border-oasis">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Total Colhido (Kg)</label>
+                            <input type="number" step="0.01" id="totalKg" readonly placeholder="Auto-calculado" class="w-full p-2.5 bg-gray-100 border border-gray-300 rounded-lg font-bold text-green-700 cursor-not-allowed">
+                        </div>
+                        <p class="col-span-full text-xs text-gray-600 mt-[-10px]">O Índice de Eficiência (%) será gerado automaticamente com base no Total (Kg) comparado ao teste de maior rendimento.</p>
+                    </div>
+
+                    <!-- Botão Adicionar -->
+<!-- ... existing code ... -->
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-600 text-sm border-b">
+                                <th class="p-3 font-semibold">Bloco</th>
+                                <th class="p-3 font-semibold">Nº Teste</th>
+                                <th class="p-3 font-semibold">Aplicação</th>
+                                <th class="p-3 font-semibold">Cultura / Var.</th>
+                                <th class="p-3 font-semibold">Dosagem</th>
+                                <th class="p-3 font-semibold">Mudas</th>
+                                <th class="p-3 font-semibold">Colheita (Un/g)</th>
+                                <th class="p-3 font-semibold">Total Kg</th>
+                                <th class="p-3 font-semibold text-center">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="testTableBody" class="text-sm divide-y divide-gray-100">
+                            <tr>
+                                <td colspan="9" class="p-4 text-center text-gray-400">Nenhum teste adicionado ainda.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+<!-- ... existing code ... -->
+            <!-- Conteúdo a ser impresso/exportado -->
+            <div id="exportableContent" class="bg-white p-8 rounded-xl shadow-md border border-gray-200">
+                
+                <div class="flex items-center justify-center gap-6 mb-8 border-b pb-6">
+                    <img src="https://i.imgur.com/wEozr34.png" alt="Logo Oásis" class="h-24 w-auto object-contain border-none">
+                    <div class="text-left">
+                        <h2 class="text-3xl font-bold text-oasis-dark">Relatório Comparativo de Eficiência</h2>
+                        <h3 class="text-xl text-gray-500 mt-2">Fazenda Oásis</h3>
+                        <p class="text-sm text-gray-400 mt-1" id="reportDate"></p>
+                    </div>
+                </div>
+
+                <!-- Resumo e Observação (Conclusão) -->
+<!-- ... existing code ... -->
+                        <thead>
+                            <tr class="bg-oasis text-white text-sm">
+                                <th class="p-3 border border-gray-300">Bloco</th>
+                                <th class="p-3 border border-gray-300">Teste</th>
+                                <th class="p-3 border border-gray-300">Aplicação</th>
+                                <th class="p-3 border border-gray-300">Cultura/Var.</th>
+                                <th class="p-3 border border-gray-300">Mudas</th>
+                                <th class="p-3 border border-gray-300">Unidades</th>
+                                <th class="p-3 border border-gray-300">Média(g)</th>
+                                <th class="p-3 border border-gray-300 font-bold bg-oasis-dark">Total Kg</th>
+                                <th class="p-3 border border-gray-300 font-bold bg-green-900">Eficiência(%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="finalTableBody" class="text-sm">
+<!-- ... existing code ... -->
+        // Adicionar um teste à lista
+        function addTest() {
+            // Validações básicas
+            const aplicacao = document.getElementById('aplicacao').value;
+            const numTeste = document.getElementById('numTeste').value;
+            const quantidade = document.getElementById('quantidade').value;
+            const totalMudas = document.getElementById('totalMudas').value;
+            const unidadesColhidas = document.getElementById('unidadesColhidas').value;
+            const mediaGrama = document.getElementById('mediaGrama').value;
+            const totalKg = document.getElementById('totalKg').value;
+
+            if (!aplicacao || !numTeste || !quantidade || !totalMudas || !unidadesColhidas || !mediaGrama) {
+                alert("Por favor, preencha todos os campos obrigatórios (Aplicação, Nº Teste, Quantidade e Dados da Colheita).");
+                return;
+            }
+
+            const novoTeste = {
+                id: Date.now(),
+                bloco: getFinalValue('bloco') || 'N/A',
+                aplicacao: aplicacao,
+                numTeste: numTeste,
+                cultura: getFinalValue('cultura') || 'N/A',
+                variedade: getFinalValue('variedade') || 'N/A',
+                quantidade: parseFloat(quantidade),
+                unidade: getFinalValue('unidade') || 'N/A',
+                totalMudas: parseInt(totalMudas),
+                unidadesColhidas: parseInt(unidadesColhidas),
+                mediaGrama: parseFloat(mediaGrama),
+                totalKg: parseFloat(totalKg),
+                eficiencia: 0 // Calculado posteriormente
+            };
+
+            testData.push(novoTeste);
+            
+            // ORDENAR ALFABETICAMENTE PELO BLOCO
+            testData.sort((a, b) => a.bloco.toString().localeCompare(b.bloco.toString(), undefined, {numeric: true, sensitivity: 'base'}));
+
+            updatePreviewTable();
+            document.getElementById('testForm').reset();
+            
+            // Esconder campos customizados após reset
+<!-- ... existing code ... -->
+        // Atualizar tabela de rascunho (Preview)
+        function updatePreviewTable() {
+            const tbody = document.getElementById('testTableBody');
+            tbody.innerHTML = '';
+
+            if (testData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-gray-400">Nenhum teste adicionado ainda.</td></tr>`;
+                return;
+            }
+
+            testData.forEach(test => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-3 font-medium">Blc ${test.bloco}</td>
+                    <td class="p-3">${test.numTeste}</td>
+                    <td class="p-3">${test.aplicacao}</td>
+                    <td class="p-3">${test.cultura} - ${test.variedade}</td>
+                    <td class="p-3">${test.quantidade} ${test.unidade}</td>
+                    <td class="p-3">${test.totalMudas}</td>
+                    <td class="p-3">${test.unidadesColhidas} un / ${test.mediaGrama}g</td>
+                    <td class="p-3 font-bold text-green-700">${test.totalKg.toFixed(2)} Kg</td>
+                    <td class="p-3 text-center">
+                        <button onclick="removeTest(${test.id})" class="text-red-500 hover:text-red-700" title="Remover">
+                            <i class="ph ph-trash text-lg"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Gerar o Relatório Final (Dashboard)
+<!-- ... existing code ... -->
+        function populateFinalTable() {
+            const tbody = document.getElementById('finalTableBody');
+            tbody.innerHTML = '';
+            
+            // Os dados já estão ordenados por Bloco desde a inserção (addTest)
+            // Entao usamos testData diretamente para manter a ordem alfabética/numérica
+            const sortedData = testData;
+
+            sortedData.forEach((test, index) => {
+                const tr = document.createElement('tr');
+                // Destacar o vencedor com fundo levemente verde
+                if(test.eficiencia === 100) tr.classList.add('bg-green-50'); 
+                else if (index % 2 === 0) tr.classList.add('bg-gray-50');
+
+                tr.innerHTML = `
+                    <td class="p-3 border border-gray-200">Bloco ${test.bloco}</td>
+                    <td class="p-3 border border-gray-200">${test.numTeste}</td>
+                    <td class="p-3 border border-gray-200 font-medium">${test.aplicacao}</td>
+                    <td class="p-3 border border-gray-200">${test.cultura}<br><span class="text-xs text-gray-500">${test.variedade}</span></td>
+                    <td class="p-3 border border-gray-200">${test.totalMudas}</td>
+                    <td class="p-3 border border-gray-200">${test.unidadesColhidas}</td>
+                    <td class="p-3 border border-gray-200">${test.mediaGrama}</td>
+                    <td class="p-3 border border-gray-200 font-bold text-gray-800">${test.totalKg.toFixed(2)} Kg</td>
+                    <td class="p-3 border border-gray-200 font-bold ${test.eficiencia === 100 ? 'text-green-700' : 'text-gray-800'}">${test.eficiencia}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function generateConclusion() {
+<!-- ... existing code ... -->
