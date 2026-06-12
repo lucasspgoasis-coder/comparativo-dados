@@ -63,7 +63,7 @@
 
     <main class="max-w-6xl mx-auto mt-8 px-4 no-print" id="inputSection">
         
-        <!-- Alerta de Notificação customizado (Substituindo o alert nativo) -->
+        <!-- Alerta de Notificação customizado -->
         <div id="notificationArea" class="hidden mb-6 p-4 rounded-lg border flex items-center gap-3 shadow-sm transition-all duration-300">
             <i id="notificationIcon" class="text-2xl"></i>
             <span id="notificationMessage" class="font-medium"></span>
@@ -83,7 +83,6 @@
                         <label class="block text-sm font-semibold text-slate-700 mb-1.5">Bloco</label>
                         <select id="bloco" onchange="toggleCustom('bloco')" required class="custom-input w-full p-3 border-2 border-slate-300 rounded-lg bg-white focus:outline-none">
                             <option value="">Selecione...</option>
-                            <!-- Blocos de 01 a 18 -->
                             <script>
                                 for(let i = 1; i <= 18; i++) {
                                     let num = i < 10 ? '0' + i : i;
@@ -210,13 +209,13 @@
             <!-- Gráficos Histórico (Preview) -->
             <div id="previewChartsContainer" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col">
-                    <h4 class="text-center text-sm font-bold text-slate-700 mb-4">Rendimento (Total Kg) e Tendência</h4>
+                    <h4 class="text-center text-sm font-bold text-slate-700 mb-4">Métricas por Bloco</h4>
                     <div class="flex-grow relative h-64 w-full">
                         <canvas id="previewBarChart"></canvas>
                     </div>
                 </div>
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center">
-                    <h4 class="text-center text-sm font-bold text-slate-700 mb-4">Proporção de Colheita</h4>
+                    <h4 class="text-center text-sm font-bold text-slate-700 mb-4">Proporção de Colheita (Kg)</h4>
                     <div class="flex-grow relative h-64 w-full max-w-[300px]">
                         <canvas id="previewPieChart"></canvas>
                     </div>
@@ -295,13 +294,13 @@
             <!-- Gráficos Dashboard -->
             <div id="dashboardChartsContainer" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
                 <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                    <h4 class="text-center text-sm font-bold text-slate-800 mb-4">Rendimento por Teste (Kg)</h4>
+                    <h4 class="text-center text-sm font-bold text-slate-800 mb-4">Evolução de Métricas por Teste</h4>
                     <div class="relative h-72 w-full">
                         <canvas id="dashboardBarChart"></canvas>
                     </div>
                 </div>
                 <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 flex flex-col items-center">
-                    <h4 class="text-center text-sm font-bold text-slate-800 mb-4">Distribuição do Rendimento</h4>
+                    <h4 class="text-center text-sm font-bold text-slate-800 mb-4">Distribuição do Rendimento (Kg)</h4>
                     <div class="relative h-72 w-full max-w-[350px]">
                         <canvas id="dashboardPieChart"></canvas>
                     </div>
@@ -556,19 +555,6 @@
         }
 
         // Funções Gráficas
-        function calculateTrendLine(data) {
-            let n = data.length;
-            if (n <= 1) return data;
-            let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
-            for (let i = 0; i < n; i++) {
-                sumX += i; sumY += data[i];
-                sumXY += i * data[i]; sumXX += i * i;
-            }
-            let m = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-            let b = (sumY - m * sumX) / n;
-            return data.map((_, i) => m * i + b);
-        }
-
         function createGradient(ctx, area) {
             if (!area) return '#10b981';
             const gradient = ctx.createLinearGradient(0, area.bottom, 0, area.top);
@@ -579,9 +565,11 @@
         }
 
         function getChartConfigs() {
-            const labels = testData.map(t => `B${t.bloco} (${t.numTeste})`);
+            // Arrays dentro do map criam quebra de linha no rótulo do gráfico
+            const labels = testData.map(t => [t.aplicacao, `B${t.bloco} (${t.numTeste})`]);
             const dataKg = testData.map(t => t.totalKg);
-            const trendData = calculateTrendLine(dataKg);
+            const dataMediaG = testData.map(t => t.mediaGrama);
+            const dataUnidades = testData.map(t => t.unidadesColhidas);
             const pieColors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#64748b'];
 
             const barConfig = {
@@ -591,14 +579,55 @@
                     datasets: [
                         {
                             type: 'line',
-                            label: 'Tendência',
-                            data: trendData,
-                            borderColor: '#f43f5e',
-                            borderWidth: 2,
-                            borderDash: [5, 5],
-                            pointRadius: 0,
+                            label: 'Evolução (Kg)',
+                            data: dataKg, // Usa os mesmos dados de Kg para ligar as barras
+                            borderColor: '#ea580c', // Laranja escuro vibrante
+                            backgroundColor: '#ea580c',
+                            borderWidth: 3,
+                            tension: 0.4, // Linha suave
+                            pointRadius: 4, // Exibe o ponto no topo da barra
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#ea580c',
+                            pointBorderWidth: 2,
                             fill: false,
-                            datalabels: { display: false }
+                            yAxisID: 'y', // Usa o eixo principal
+                            datalabels: { display: false } // Sem dados escritos em cima da linha
+                        },
+                        {
+                            type: 'bar', // Alterado para barra
+                            label: 'Média (g)',
+                            data: dataMediaG,
+                            borderColor: '#fb923c', // Laranja claro
+                            backgroundColor: '#fed7aa', // Fundo Laranja claro
+                            borderWidth: 1,
+                            borderRadius: 4, // Cantos arredondados na barra
+                            yAxisID: 'y1', // Usa o eixo secundário
+                            datalabels: { 
+                                display: true,
+                                align: 'end',
+                                anchor: 'end',
+                                color: '#c2410c',
+                                font: { size: 10, weight: 'bold' },
+                                formatter: function(value) { return value + 'g'; }
+                            } 
+                        },
+                        {
+                            type: 'bar', // Alterado para barra
+                            label: 'Unidades',
+                            data: dataUnidades,
+                            borderColor: '#eab308', // Amarelo
+                            backgroundColor: '#fef08a', // Fundo Amarelo claro
+                            borderWidth: 1,
+                            borderRadius: 4, // Cantos arredondados na barra
+                            yAxisID: 'y1', // Usa o eixo secundário
+                            datalabels: { 
+                                display: true,
+                                align: 'end',
+                                anchor: 'end',
+                                color: '#a16207',
+                                font: { size: 10, weight: 'bold' },
+                                formatter: function(value) { return value + ' un'; }
+                            }
                         },
                         {
                             type: 'bar',
@@ -612,11 +641,12 @@
                             borderRadius: 6,
                             borderWidth: 1,
                             borderColor: '#047857',
+                            yAxisID: 'y', // Usa o eixo principal
                             datalabels: {
                                 align: 'end',
                                 anchor: 'end',
                                 color: '#064e3b',
-                                font: { weight: 'bold' },
+                                font: { weight: 'bold', size: 11 },
                                 formatter: function(value) {
                                     return value.toFixed(1) + 'kg';
                                 }
@@ -627,13 +657,28 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    layout: { padding: { top: 30 } },
+                    layout: { padding: { top: 40 } }, // Aumentado para exibir todos os rótulos de topo
                     plugins: {
                         legend: { display: true, position: 'bottom' },
                         tooltip: { mode: 'index', intersect: false }
                     },
                     scales: {
-                        y: { beginAtZero: true, grid: { borderDash: [4, 4] } }
+                        y: { 
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            beginAtZero: true, 
+                            title: { display: true, text: 'Rendimento (Kg)' },
+                            grid: { borderDash: [4, 4] } 
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            beginAtZero: true,
+                            title: { display: true, text: 'Unidades / Média (g)' },
+                            grid: { drawOnChartArea: false } // Evita conflito de linhas de malha
+                        }
                     }
                 }
             };
@@ -656,7 +701,7 @@
                         legend: { position: 'right', labels: { boxWidth: 12, font: { size: 10 } } },
                         datalabels: {
                             color: '#fff',
-                            font: { weight: 'bold', size: 11 },
+                            font: { weight: 'bold', size: 16 },
                             formatter: (value, ctx) => {
                                 let sum = 0;
                                 let dataArr = ctx.chart.data.datasets[0].data;
